@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Filter from './Components/Filter'
 import PersonForm from './Components/PersonForm'
 import Persons from './Components/Persons'
-import axios from 'axios'
+import pServiece from './services/persons'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -12,15 +12,14 @@ const App = () => {
 
   useEffect(() => {
     console.log('effect');
-    axios
-      .get('http://localhost:3001/persons')
+    pServiece
+      .getAll()
       .then(response => {
-        console.log('fulfilled')
-        setPersons(response.data)
+        setPersons(response)
       })
   }, [])
 
-  const personsToShow = persons.filter( item => item.name.toLowerCase().includes(newSearch.toLowerCase()) )
+  
   
   const handleNameChange = (event) => {
     console.log(event.target.value)
@@ -31,25 +30,50 @@ const App = () => {
     setNewNum(event.target.value)
 }
 
-  const checker = persons.filter(person => person.name === newName)
   
   const addPerson = (event) => {
     event.preventDefault()
-    if (checker.length > 0) {
-      return (
-        alert(`${newName} is already added to phonebook`)
-    )
+    const checker = persons.find(person => person.name === newName)
+    const changedNum = { ...checker , number : newNum}
+    
+    if ((checker !== undefined) && window.confirm(`${checker.name} is already in the phonebook, do you want to change the number.`)) {
+      pServiece
+        .update(checker.id, changedNum)
+        .then(response => {
+          setPersons(persons.map(person => person.id === checker.id ? response : person))
+        })
+      
   } else {
       const nameObject = {
         name: newName,
         number: newNum,
-        id: persons.length + 1
   }
-    setPersons(persons.concat(nameObject))
+      pServiece
+        .create(nameObject)
+        .then(response => {
+          setPersons(persons.concat(response))
+  })
+    
     setNewName('')
     setNewNum('')
 }
 }
+
+  const deleteHandler = (id) => {
+    const deletedPerson = persons.find(n => n.id == id)
+    const newPersons = persons.filter(n => n.id !== deletedPerson.id)
+    if (window.confirm(`Are you sure you want to delete ${deletedPerson.name}?`)) {
+      pServiece
+        .remove(id)
+        .then(response => {
+          setPersons(newPersons)
+      })
+      .catch(error => console.log('something happend'))
+          
+  } else {
+       setPersons(persons)
+ }
+  }
 
 
   return (
@@ -60,11 +84,13 @@ const App = () => {
 
       <h2>Add a new</h2>
       
-      <PersonForm newName={newName} newNum={newNum}  handleNameChange={handleNameChange} handleNumChange={handleNumChange} addPerson={addPerson} />
+      <PersonForm newName={newName} 
+                  newNum={newNum}  handleNameChange={handleNameChange} 
+                  handleNumChange={handleNumChange} addPerson={addPerson} />
 
       <h2>Numbers</h2>
 
-      <Persons personsToShow={personsToShow} />
+      <Persons persons={persons} newSearch={newSearch} deleteHandler={deleteHandler}/>
     </div>
   )
 }
