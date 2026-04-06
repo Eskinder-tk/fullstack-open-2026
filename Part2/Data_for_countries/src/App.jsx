@@ -24,7 +24,6 @@ const App = () => {
     setSearch(event.target.value)
   }
 
-
   const showHandler = (event, name) => {
     event.preventDefault();
     setSearch(name)
