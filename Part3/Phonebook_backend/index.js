@@ -96,8 +96,8 @@ app.get('/info' , (request , response) => {
 
 
 app.delete('/api/persons/:id', (request , response) => {
-    const id = request.params.id
-    persons = persons.map(n => n.id !== id)
+    const id = Number(request.params.id)
+    persons = persons.filter(n => n.id !== id)
     response.status(204).end()
 })
 
