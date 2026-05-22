@@ -1,5 +1,7 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
+const Person = require('./models/person')
 
 const app = express()
 
@@ -36,7 +38,9 @@ let persons = [
 ]
 
 app.get('/api/persons' , (request , response) => {
-    response.json(persons)
+    Person.find({}).then(person => {
+        response.json(person)
+    })
 })
 
 app.get('/api/persons/:id' , (request , response) => {
@@ -52,40 +56,22 @@ app.get('/api/persons/:id' , (request , response) => {
 app.post('/api/persons' , (request , response) => {
     const id = Math.round(Math.random() * 10000)
     const body = request.body
-    const sameName = persons.find(n => n.name === body.name)
-    const sameNumber = persons.find(n => n.number === body.number)
-    
     
     if (!body.name) {
         return response.status(400).json({ 
         error: 'Name is required!' 
     })
-    } 
-    else if (!body.number) {
+    }
+     else if (!body.number) { 
         return response.status(400).json({ 
          error: 'Number is required!' 
+    }) }
+
+    const person = new Person({
+        name : body.name ,
+        number : body.number
     })
-    }
-    else if (sameName) {
-        return response.status(400).json({ 
-        error: 'Name must be unique!' 
-    })
-    }
-    else if (sameNumber) {
-        const num = sameNumber.name
-        return response.status(400).json({ 
-        error: `This number is the same as ${num}` 
-    })
-    }
-    else {
-        const person = {
-        name : body.name,
-        number : body.number,
-        id : id
-    }
-        persons = persons.concat(person)
-        response.json(person)
-    }
+    person.save().then(person => response.json(person))
 })
 
 app.get('/info' , (request , response) => {
@@ -94,15 +80,13 @@ app.get('/info' , (request , response) => {
     response.send(`<p>Phonebook has info for ${total} people.</p> <p>${date}</p>`)
 })
 
-
 app.delete('/api/persons/:id', (request , response) => {
     const id = Number(request.params.id)
     persons = persons.filter(n => n.id !== id)
     response.status(204).end()
 })
 
-
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
