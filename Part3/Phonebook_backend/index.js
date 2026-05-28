@@ -11,22 +11,22 @@ app.use(express.json())
 
 morgan.token('body' , (req) => JSON.stringify(req.body))
 
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 
 app.get('/api/persons' , (request , response, next) => {
-    Person.find({}).then(person => {
-        response.json(person)
-    })
-          .catch(error => next(error))
+  Person.find({}).then(person => {
+    response.json(person)
+  })
+    .catch(error => next(error))
 })
 
 app.get('/api/persons/:id' , (request , response, next) => {
-    Person.findById(request.params.id)
-          .then(person => {
-            response.json(person)
+  Person.findById(request.params.id)
+    .then(person => {
+      response.json(person)
     })
-          .catch(error => next(error))
+    .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -49,24 +49,24 @@ app.put('/api/persons/:id', (request, response, next) => {
 })
 
 app.post('/api/persons' , (request , response , next) => {
-    const { name , number } = request.body
-    
-    if (!name) {
-        return response.status(400).json({ 
-        error: 'Name is required!' 
+  const { name , number } = request.body
+
+  if (!name) {
+    return response.status(400).json({
+      error: 'Name is required!'
     })
-    }
-     else if (!number) { 
-        return response.status(400).json({ 
-         error: 'Number is required!' 
+  }
+  else if (!number) {
+    return response.status(400).json({
+      error: 'Number is required!'
     }) }
 
-    const person = new Person({
-        name : name ,
-        number : number
-    })
-    person.save().then(person => response.json(person))
-          .catch(error => next(error))
+  const person = new Person({
+    name : name ,
+    number : number
+  })
+  person.save().then(person => response.json(person))
+    .catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
@@ -82,11 +82,11 @@ app.get('/info', (request, response) => {
 })
 
 app.delete('/api/persons/:id', (request , response, next) => {
-    Person.findByIdAndDelete(request.params.id)
-          .then(result => {
-            response.json(204).end()
-     })
-          .catch(error => next(error))
+  Person.findByIdAndDelete(request.params.id)
+    .then(() => {
+      response.json(204).end()
+    })
+    .catch(error => next(error))
 })
 
 const unknownEndpoint = (request, response) => {
@@ -111,5 +111,5 @@ app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })

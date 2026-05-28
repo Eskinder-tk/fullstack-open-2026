@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const { log } = require('node:console')
 
 if (process.argv.length < 3) {
   console.log('give password as argument')
@@ -29,22 +28,21 @@ if (process.argv.length === 5) {
   const person = new Person({
     content: name,
     Phone_number : number,
-})
-  person.save().then(result => {
+  })
+  person.save().then(() => {
     console.log(`added ${name} number ${number} to phonebook!`)
     mongoose.connection.close()
-})
-
+  })
 }
 
 
 if (process.argv.length === 3) {
   Person.find({}).then(result => {
-  result.forEach(person => {
-    console.log(person)
+    result.forEach(person => {
+      console.log(person)
+    })
+    mongoose.connection.close()
   })
-  mongoose.connection.close()
-})
 }
 
 
