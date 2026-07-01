@@ -85,14 +85,14 @@ const App = () => {
     if (window.confirm(`Are you sure you want to delete ${deletedPerson.name}?`)) {
       pServiece
         .remove(id)
-        .then(response => {
+        .then( () => {
           setPersons(newPersons)
           setNewMessage(`Successfully removed ${deletedPerson.name}.`)
           setTimeout(() => {
             setNewMessage(null) 
           }, 5000)
       })
-      .catch(error => {
+      .catch( () => {
         setError(`${deletedPerson.name}'s information has already been removed.`)
         setPersons(newPersons)
           setTimeout(() => {
