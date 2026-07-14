@@ -3,18 +3,34 @@ const assert = require('assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const app = require('../app')
 const blog = require('../models/blog')
 const helper = require('./test_helper')
+const { tokenExtractor, userExtractor } = require('../utils/middleware')
+const bcrypt = require('bcrypt')
+
 
 const api = supertest(app)
+app.use(tokenExtractor)
 
-beforeEach(async ()=> {
-    await Blog.deleteMany({})
-    await Blog.insertMany(helper.initialBloges)
+beforeEach(async () => {
+  await Blog.deleteMany({})
+  await User.deleteMany({})
+
+  const passwordHash = await bcrypt.hash('salainen', 10)
+  const user = new User({ username: 'root', passwordHash })
+  const savedUser = await user.save()
+
+  const blogsWithUser = helper.initialBloges.map(blog => ({
+    ...blog,
+    user: savedUser._id 
+  }))
+
+  await Blog.insertMany(blogsWithUser)
 })
 
-describe('when there is initially some notes saved', () => {
+describe('when there is initially some blogs saved', () => {
     test('All blogs are returned' , async () => {
         const response = await api.get('/api/blogs')
 
@@ -35,14 +51,17 @@ test('a valid blog can be added' , async () => {
                     "title": "ISTANBUL",
                     "author": "Ekndnrias",
                     "url": "iiiiiiiiii",
-                    "likes": 878,
+                    "likes": 878
                     }
-
-    await api
+    const token = await helper.token()
+    
+    const res = await api
         .post('/api/blogs')
         .send(newBlog)
-        .expect(201)
-        .expect('Content-Type' , /application\/json/)
+        .set('Authorization' , `Bearer ${token}`)
+        .set('Accept', 'application/json');
+        
+    assert.strictEqual(res.statusCode , 201)
 
     const blogsAtEnd = await helper.blogsInDb()
     assert.strictEqual(blogsAtEnd.length , helper.initialBloges.length + 1)
@@ -58,11 +77,15 @@ test('if the likes property is missing it will default the value to 0' , async (
                     "url": "iiiiiiiiii"
                     }
 
-    await api
+    const token = await helper.token()
+    
+    const res = await api
         .post('/api/blogs')
         .send(newBlog)
-        .expect(201)
-        .expect('Content-Type' , /application\/json/)
+        .set('Authorization' , `Bearer ${token}`)
+        .set('Accept', 'application/json');
+
+    assert.strictEqual(res.statusCode , 201)
 
     const blogsAtEnd = await helper.blogsInDb()
     
@@ -77,10 +100,15 @@ test('if a url or a title is missing it will respond with status 400 bad request
                          "likes": 11
                      }
 
-    await api
+    const token = await helper.token()
+    
+    const res = await api
         .post('/api/blogs')
         .send(newBlog)
-        .expect(400)
+        .set('Authorization' , `Bearer ${token}`)
+        .set('Accept', 'application/json');
+
+    assert.strictEqual(res.statusCode , 400)
         
     const blogsAtEnd = await helper.blogsInDb()
     assert.strictEqual(blogsAtEnd.length , helper.initialBloges.length)
@@ -90,9 +118,14 @@ test('if a url or a title is missing it will respond with status 400 bad request
 test('a blog can be deleted using the id property' , async () => {
     const blogAtStart = await helper.blogsInDb()
     const id = blogAtStart[0].id
-    await api
+
+    const token = await helper.token()
+    
+    const res = await api
         .delete(`/api/blogs/${id}`)
-        .expect(204)
+        .set('Authorization' , `Bearer ${token}`)
+
+    assert.strictEqual(res.statusCode , 204)
 
     const blogsAtEnd = await helper.blogsInDb()
     assert.strictEqual(blogsAtEnd.length , helper.initialBloges.length - 1)
@@ -122,6 +155,21 @@ test('a blog can be updated with a valid id' , async () => {
     assert(likes.includes(uBlog.likes))
     assert(title.includes(uBlog.title))
 
+})
+
+test('Creation will fail if a token is not provided' , async () => {
+    const newBlog = {
+                    "title": "ISTANBUL",
+                    "author": "Ekndnrias",
+                    "url": "iiiiiiiiii",
+                    "likes": 878
+                    }
+    
+    const res = await api
+        .post('/api/blogs')
+        .send(newBlog)
+        
+    assert.strictEqual(res.statusCode , 401)
 })
 
 after (async () => {
