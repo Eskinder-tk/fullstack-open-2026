@@ -36,6 +36,7 @@ const Blog = ({ blog , updateBlog , user , deleteBlog }) => {
   }
 
   const handleDelete = (event , blog) => {
+    event.preventDefault()
     deleteBlog(blog)
   }
 
