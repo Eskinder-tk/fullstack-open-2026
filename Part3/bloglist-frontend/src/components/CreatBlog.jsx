@@ -1,13 +1,32 @@
-const CreatBlog = ({ url , setUrl , author , setAuthor , title , setTitle , addBlog}) => (
-    
+import { useState } from 'react'
+
+const CreatBlog = ({ createBlog }) => {
+
+  const [title, setTitle] = useState('')
+  const [author, setAuthor] = useState('')
+  const [url, setUrl] = useState('')
+
+  const addBlog = event => {
+    event.preventDefault()
+    createBlog({
+      title : title,
+      author : author,
+      url : url
+    })
+    setTitle('')
+    setAuthor('')
+    setUrl('')
+  }
+
+  return (
     <div>
-        <h2>Create new</h2>
-    
-    
-    <form onSubmit={addBlog}>
+      <h2>Create new</h2>
+
+
+      <form onSubmit={addBlog}>
         <div>
           <label>
-            title : 
+            title :
             <input
               type='text'
               value={title}
@@ -16,7 +35,7 @@ const CreatBlog = ({ url , setUrl , author , setAuthor , title , setTitle , addB
         </div>
         <div>
           <label>
-            author : 
+            author :
             <input
               type='text'
               value={author}
@@ -25,7 +44,7 @@ const CreatBlog = ({ url , setUrl , author , setAuthor , title , setTitle , addB
         </div>
         <div>
           <label>
-            url : 
+            url :
             <input
               type='text'
               value={url}
@@ -34,6 +53,6 @@ const CreatBlog = ({ url , setUrl , author , setAuthor , title , setTitle , addB
         </div>
         <button type="submit">create</button>
       </form>
-      </div>
-)
+    </div>
+  )}
 export default CreatBlog
