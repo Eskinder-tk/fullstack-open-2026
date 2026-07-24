@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import { TextField , Button  , Box} from '@mui/material'
 
 const CreatBlog = ({ createBlog }) => {
 
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
+  const navigate = useNavigate()
 
   const addBlog = event => {
     event.preventDefault()
@@ -16,6 +20,7 @@ const CreatBlog = ({ createBlog }) => {
     setTitle('')
     setAuthor('')
     setUrl('')
+    navigate('/')
   }
 
   return (
@@ -23,37 +28,37 @@ const CreatBlog = ({ createBlog }) => {
       <h2>Create new</h2>
 
       <form onSubmit={addBlog}>
-        <div>
-          <label>
-            title :
-            <input
-              type='text'
+
+
+        <Box
+            component="form"
+            sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
+            noValidate
+            autoComplete="off"
+         >
+          <div>
+            <TextField id="title" label="Title" variant="filled" type='text'
               value={title}
-              onChange={({ target }) => setTitle(target.value)}
-              placeholder='write title here..'/>
-          </label>
-        </div>
-        <div>
-          <label>
-            author :
-            <input
-              type='text'
+              onChange={({ target }) => setTitle(target.value)}/>
+          </div>
+          <div>
+            <TextField id="author" label="Author" variant="filled" type='text'
               value={author}
-              onChange={({ target }) => setAuthor(target.value)}
-              placeholder='write author name here..'/>
-          </label>
-        </div>
-        <div>
-          <label>
-            url :
-            <input
-              type='text'
+              onChange={({ target }) => setAuthor(target.value)}/>
+          </div>
+
+          <div>
+            <TextField id="url" label="URL" variant="filled" type='text'
               value={url}
-              onChange={({ target }) => setUrl(target.value)}
-              placeholder='write the url here..'/>
-          </label>
+              onChange={({ target }) => setUrl(target.value)}/>
+          </div>
+      
+        </Box>
+
+        <div>
+          <Button type="submit" variant="contained" style={{ marginTop: 10 }}>create</Button>
         </div>
-        <button type="submit">create</button>
+
       </form>
     </div>
   )}

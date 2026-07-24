@@ -34,12 +34,14 @@ blogsRouter.post('/', userExtractor , async (request, response) => {
     author: res.author,
     url: res.url,
     likes: res.likes,
-    user: user._id 
+    user: user._id || user.id
   });
 
   const savedBlog = await blog.save();
   user.blogs = user.blogs.concat(savedBlog._id);
   await user.save();
+
+  await savedBlog.populate('user', { username: 1, name: 1 });
 
   response.status(201).json(savedBlog);
 });

@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import {
+  Routes, Route, Link, useMatch
+} from 'react-router-dom'
 
-const Blog = ({ blog , updateBlog , user , deleteBlog }) => {
+const Blog = ({ blog , updateBlog , user  }) => {
 
   const [show , setShow] = useState(false)
 
-  const verifyUser = blog.user.username === user.username ? true : false
+  const verifyUser = blog.user?.username === user?.username ? true : false
 
   const showWhenVisible = { display: show ? '' : 'none' }
 
@@ -42,24 +45,17 @@ const Blog = ({ blog , updateBlog , user , deleteBlog }) => {
 
 
   return (
-    <div style={blogStyle} className='titleAuthor'>
-      <div >
-        {blog.title} {blog.author}
-        <button onClick={toggleDetail} className='butt'>{buttonLabel}</button>
-      </div>
-      <div style={showWhenVisible} className='url'>
-        <div>
-          {blog.url}
-        </div>
-        <div className='like'>
-          {blog.likes} <button onClick={(event) => handleBlogUpdate(event, blog)} className='likeButt'>like</button>
-        </div>
-        <div className='author'>
-          {blog.author}
-        </div>
-        <button style={showVerified} onClick={(event) => handleDelete(event, blog)}>Delete</button>
-
-      </div>
+    <div className='titleAuthor'>
+      <ul >
+        <li>
+          <Link to = {`/blogs/${blog.id}`}>{blog.title}  by  {blog.author}</Link>
+        </li>
+        
+        
+        
+      </ul>
+     
+    
     </div>
 
 

@@ -8,7 +8,12 @@ import CreatBlog from './components/CreatBlog'
 import Notify from './components/Notify'
 import Error from './components/Error'
 import Togglable from './components/Togglable'
-
+import {
+  Routes, Route, Link, useMatch
+} from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
+import BlogDetail from './components/BlogDetail'
+import { AppBar , Toolbar , Button , Typography} from '@mui/material'
 
 
 const App = () => {
@@ -18,6 +23,8 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
+  const id = useParams().id
+  const navigate = useNavigate()
 
 
   useEffect(() => {
@@ -35,13 +42,13 @@ const App = () => {
     }
   }, [])
 
-  const noteFormRef = useRef()
+  //const noteFormRef = useRef()
 
   const addBlog = (blogObject) => {
 
     blogService.create(blogObject).then(returnedBlogs => {
       returnedBlogs.user = user
-      noteFormRef.current.toggleVisibility()
+      //noteFormRef.current.toggleVisibility()
       setBlogs(blogs.concat(returnedBlogs))
 
       setNewMessage(`A new blog ${blogObject.title} by ${blogObject.author} have been added`)
@@ -50,25 +57,7 @@ const App = () => {
       }, 5000)
     })
   }
-  const deleteBlog = (blog) => {
-    console.log(blog.id)
-
-
-    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      blogService.remove(blog.id).then( () => {
-        const filteredBlogs = blogs.filter(b => b.id !== blog.id)
-        setBlogs(filteredBlogs)
-        setNewMessage(`Successfully removed blog ${blog.title} by ${blog.author}`)
-        setTimeout(() => {
-          setNewMessage(null)
-        }, 5000)
-      })
-    }
-    else {
-      setBlogs(blogs)
-    }
-
-  }
+  
 
   const handleLikes = (id ,blogObject) => {
     blogService.update(id , blogObject).then((res) => {
@@ -89,6 +78,7 @@ const App = () => {
       setUser(user)
       setUsername('')
       setPassword('')
+      navigate('/')
       setNewMessage(`${user.name} successfully logged in`)
       setTimeout(() => {
         setNewMessage(null)
@@ -117,31 +107,86 @@ const App = () => {
 
   const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)
 
+  const padding = {
+    padding: 5
+  }
+
+  const match = useMatch('/blogs/:id')
+
+  const blg = match
+    ? blogs.find(blog => blog.id === match.params.id)
+    : null
+
+  console.log(blg)
+
+  const style = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }
+  const logOutStyle = { '&:hover': { bgcolor: 'rgba(226, 5, 5, 0.8)' } }
+  const loginStyle = { '&:hover': { bgcolor: 'rgba(49, 192, 9, 0.8)' } }
+
   return (
     <div>
-      <h2>blogs</h2>
+
+
+      <AppBar position="static">
+
+        <Toolbar>
+
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, pl: 1 }}>
+          Blog App
+          </Typography>
+          <Button color="inherit" component={Link} to="/" sx={style}>
+          Blogs
+          </Button>
+          <Button color="inherit" component={Link} to="/create" sx={style}>
+          New Blog
+          </Button>
+
+          {!user && <Button color="inherit" component={Link} to="/login" sx={loginStyle}> Login </Button>}
+
+          {user && <Button onClick={logUserOut} color="inherit" sx={logOutStyle} >log out</Button>}
+        </Toolbar>
+      </AppBar>
+
+      
+
+      
       <Error error = {error} />
 
       <Notify message = {newMessage} />
-      {!user && <LoginForm handleLogin={handleLogin}
+
+      <Routes>
+        <Route path='/blogs/:id' element = {
+          <BlogDetail blog={blg} blogs={blogs} updateBlog={handleLikes} user={user}  setBlogs={setBlogs} setNewMessage={setNewMessage}/>
+        } />
+
+        <Route path='/create' element = {
+          <CreatBlog createBlog={addBlog} />
+        }/>
+
+        <Route path='/' element={
+          
+          <li>
+            <h2>Blogs</h2>
+            {sortedBlogs.map(blog =>
+            <Blog key={blog.id} blog={blog} updateBlog={handleLikes} user={user}/> )}
+          </li>
+        } />
+
+        <Route path='/login' element={
+          <LoginForm handleLogin={handleLogin}
         username={username}
         password={password}
         setUsername={setUsername}
         setPassword={setPassword}/>
-      }
+        } />
 
-      {user && (
-        <div>
-          <div>
-            <p>{user.name} logged in <button onClick={logUserOut}>log out</button></p>
-          </div>
-          {blogForm()}
-          {sortedBlogs.map(blog =>
-            <Blog key={blog.id} blog={blog} updateBlog={handleLikes} user={user} deleteBlog={deleteBlog}/> )}
-          <button onClick={logUserOut}>log out</button>
+        
 
-        </div>
-      )}
+      
+
+      </Routes>
+
+      
     </div>
   )
 }

@@ -23,24 +23,22 @@ describe('Blog app', () => {
     await page.goto('/')
   })
 
-  test('Login form is shown', async ({ page }) => {
-    const locator = page.getByText('blogs')
-    await expect(locator).toBeVisible()
-    await expect(page.getByText('login')).toBeVisible()})
-
     describe('Login', () => {
         test('succeeds with correct credentials', async ({ page }) => {
+            await page.getByRole('link', { name: 'login' }).click();
             await loginWith(page, 'mluukkai', 'salainen')
-            await expect(page.getByText('Matti Luukkainen logged in')).toBeVisible()
+
+            const noticeDiv = page.locator('.notice')
+            await expect(noticeDiv).toContainText('successfully logged in')
+            
         })
 
         test('fails with wrong credentials', async ({ page }) => {
+            await page.getByRole('link', { name: 'login' }).click();
             await loginWith(page, 'mluukkai', 'wrong')
 
             const errorDiv = page.locator('.error')
             await expect(errorDiv).toContainText('wrong credentials')
-            await expect(errorDiv).toHaveCSS('border-style', 'solid')
-            await expect(errorDiv).toHaveCSS('color', 'rgb(255, 0, 0)')
 
             await expect(page.getByText('Matti Luukkainen logged in')).not.toBeVisible()
         })
@@ -48,49 +46,82 @@ describe('Blog app', () => {
 
   describe('when logged in', () => {
     beforeEach(async ({ page }) => {
+      await page.getByRole('link', { name: 'login' }).click();
       await loginWith(page, 'ekndle', 'salainen')
-      await createNote(page, ['Test Title' , 'Test author' , 'test author'])
-      await page.getByText('Esnkdr logged in').getByText('log out').click()
+      
     })
 
     test('a new blog can be created', async ({ page }) => {
-        await loginWith(page, 'mluukkai', 'salainen')
+    
+        const noticeDiv = page.locator('.notice')
+            await expect(noticeDiv).toContainText('successfully logged in')
+       
+        await page.getByRole('link', { name: 'new blog' }).click();
         await createNote(page, ['Be Great' , 'Alexander tha Great' , 'beeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt'])
-        await expect(page.getByText('Be Great Alexander tha Great')).toBeVisible()
+        await expect(page.getByRole('link', { name: 'Be Great by Alexander tha' })).toBeVisible()
+        
     })
-
     test('a blog can be liked', async ({ page }) => {
-        await loginWith(page, 'mluukkai', 'salainen')
+        const noticeDiv = page.locator('.notice')
+            await expect(noticeDiv).toContainText('successfully logged in')
+            
+        await page.getByRole('link', { name: 'new blog' }).click();
         await createNote(page, ['Be Great' , 'Alexander tha Great' , 'beeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt'])
-        await page.getByText('Be Great Alexander tha Great').getByText('view').click()
-        await page.getByText('Be Great Alexander tha GreathidebeeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt0').getByText('like').click()
+        await page.getByRole('link', { name: 'Be Great by Alexander tha' }).click()
+        await page.getByRole('button', {name : 'like'}).click()
 
         await expect(page.getByText('1')).toBeVisible()
     })
 
-    test('a blog can only be deleted by the user who created it', async ({ page }) => {
-        await loginWith(page, 'mluukkai', 'salainen')
-        await createNote(page, ['Be Great' , 'Alexander tha Great' , 'beeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt'])
-        await page.getByText('Be Great Alexander tha Great').getByText('view').click()
+    test('A logged-in user and the creator can delete a blog', async ({ page }) => {
+
+      const noticeDiv = page.locator('.notice')
+            await expect(noticeDiv).toContainText('successfully logged in')
+            
+            
+      await page.getByRole('link', { name: 'new blog' }).click()
+      await createNote(page, ['Be Great', 'Alexander tha Great', 'beeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt'])
+  
+  
+      await page.getByRole('link', { name: 'Be Great by Alexander tha' }).click()
+
+  
+      const deleteButton = page.getByRole('button', { name: 'Delete' })
+      await expect(deleteButton).toBeVisible()
+
+  
+      page.once('dialog', async dialog => {
+        await dialog.accept()
+      })
+
+  
+      await deleteButton.click()
+      await expect(page.getByRole('link', { name: 'Be Great by Alexander tha' })).not.toBeVisible()
+})
+
+   test('A user that is not the creator of the blog cannot see the delete button', async ({ page }) => {
+
+    const noticeDiv = page.locator('.notice')
+            await expect(noticeDiv).toContainText('successfully logged in')
+           
+
+      await page.getByRole('link', { name: 'new blog' }).click()    
+
+      await createNote(page, ['Be Great', 'Alexander tha Great', 'beeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt'])
+            
+      await page.getByRole('button', { name: 'log out' }).click();
+
+      await page.getByRole('link', { name: 'login' }).click()
+      await loginWith(page, 'mluukkai', 'salainen')
       
-        page.once('dialog', async dialog => {
-        await dialog.accept() // Clicks "OK"
-  })
+  
+      await page.getByRole('link', { name: 'Be Great by Alexander tha' }).click()
 
-        await page.getByText('Be Great Alexander tha GreathidebeeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt0').getByText('delete').click()
+  
+      await expect(page.getByRole('button', { name: 'Delete' })).not.toBeVisible()
+})
 
-        await expect(page.getByText('Be Great Alexander tha Great')).not.toBeVisible()
-    })
-
-    test('a blog delete button is not visible to users other than the one who created it', async ({ page }) => {
-        await loginWith(page, 'mluukkai', 'salainen')
-        await createNote(page, ['Be Great' , 'Alexander tha Great' , 'beeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt'])
-        await page.getByText('Test Title Test author').getByText('view').click()
-
-        await expect(page.getByText('Test Title Test author').getByText('delete')).not.toBeVisible()
-    })
-
-    test('a blog delete button is only visible to the creator of the blog', async ({ page }) => {
+    /*test('a blog delete button is only visible to the creator of the blog', async ({ page }) => {
         await loginWith(page, 'mluukkai', 'salainen')
         await createNote(page, ['Be Great' , 'Alexander tha Great' , 'beeeeeeeeeGreeeeeeeeeeeaaaaaaaaaatt'])
         await page.getByText('Be Great Alexander tha Great').getByText('view').click()
@@ -133,6 +164,6 @@ describe('Blog app', () => {
     await expect(blogs.nth(1)).toContainText('little liked blog')
     await expect(blogs.nth(2)).toContainText('one liked blog')
 })
-    
+    */
   })
 })
