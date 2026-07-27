@@ -1,15 +1,22 @@
 import { useAnecdoteActions } from '../store'
+import {useNotficationAction} from '../notificationStore'
 
 const AnecdoteForm = () => {
-    const { add} = useAnecdoteActions()
+    const { add } = useAnecdoteActions()
+    const { setMessage } = useNotficationAction()
     
-    const getId = () => (100000 * Math.random()).toFixed(0)
-
-  const addAnecdote = (e) => {
+    
+  const addAnecdote = async (e) => {
     e.preventDefault()
-    const content = e.target.anecdote.value
-    add({content , id : getId() , votes : 0})
-    e.target.reset()
+    const form = e.target
+    const content = form.anecdote.value
+
+    await add(content)
+    setMessage(`New Anecdote '${content}' has been added.`)
+    setTimeout(() => {
+      setMessage(null)
+    }, 5000)
+    form.reset()
   }
 
   return (
