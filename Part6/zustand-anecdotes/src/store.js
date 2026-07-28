@@ -36,13 +36,14 @@ const useAnecdoteStore = create((set , get) => ({
     setFilter : value => set(() => ({filter : value})),
     initialize : async () => {
       const anecdotes = await anecdoteService.getAll()
+      //const sortedAnecdotes = anecdotes.toSorted((a, b) => b.votes - a.votes)
       set(() => ({ anecdotes }))
     }
   },
 }))
 
 export const useAnecdotes = () => {
-  const anecdotes = useAnecdoteStore((state) => state.anecdotes)
+  const anecdotes = useAnecdoteStore((state) => state.anecdotes).toSorted((a, b) => b.votes - a.votes)
   const filter = useAnecdoteStore((state) => state.filter)
   if (filter === '') return anecdotes
   if (filter !== '') return anecdotes.filter(anec => anec.content.toLowerCase().includes(filter.toLowerCase()))
@@ -51,3 +52,7 @@ export const useAnecdotes = () => {
 
 
 export const useAnecdoteActions = () => useAnecdoteStore((state) => state.actions)
+
+export const useFilter = () => useAnecdoteStore((state) => state.filter )
+
+export default useAnecdoteStore
