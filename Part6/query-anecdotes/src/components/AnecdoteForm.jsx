@@ -1,6 +1,9 @@
 import {useAnecdotes} from '../hooks/useAnecdotes'
+import useNotify from '../hooks/useNotify'
 
 const AnecdoteForm = () => {
+
+  const {setMessage} = useNotify()
 
   const {newAnecdoteMutation} = useAnecdotes()
 
@@ -10,6 +13,10 @@ const AnecdoteForm = () => {
     const content = event.target.anecdote.value
     event.target.reset()
     newAnecdoteMutation.mutate({ content, votes: 0 })
+    setMessage(`New anecdote '${content}' added`)
+    setTimeout(() => {
+      setMessage('')
+    }, 5000)
   }
 
   return (

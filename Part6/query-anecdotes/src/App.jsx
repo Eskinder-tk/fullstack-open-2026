@@ -1,16 +1,22 @@
 import AnecdoteForm from './components/AnecdoteForm'
 import Notification from './components/Notification'
 import {useAnecdotes} from './hooks/useAnecdotes'
+import useNotify from './hooks/useNotify'
 
 const App = () => {
+
+  const {setMessage} = useNotify()
 
   const {isError , isPending , updateAnecdoteMutation, anecdotes} = useAnecdotes()
 
   const handleVote = (anecdote) => {
     console.log('vote')
     updateAnecdoteMutation.mutate({...anecdote , votes : anecdote.votes + 1})
+    setMessage(`anecdote '${anecdote.content}' voted`)
+    setTimeout (() => {
+      setMessage('')
+    }, 5000)
   }
-  //console.log(JSON.parse(JSON.stringify(result)))
  
   if (isPending) {
     return <span>Loading...</span>
@@ -20,7 +26,7 @@ const App = () => {
     return <span>Error: Anecdote service not available due to problems in the server</span>
   }
 
-  return (
+  return (  
     <div>
       <h3>Anecdote app</h3>
 
