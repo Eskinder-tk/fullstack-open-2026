@@ -1,0 +1,15 @@
+{
+  "name": "blog-app",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix bloglist-backend\" \"npm run dev --prefix bloglist-frontend\"",
+    "build": "npm run build --prefix bloglist-frontend",
+    "start": "cross-env NODE_ENV=production npm start --prefix bloglist-backend"
+  },
+  "dependencies": {
+    "concurrently": "^10.0.4"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
+}
